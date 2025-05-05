@@ -1,0 +1,15 @@
+{
+  "name": "hands-on_02",
+  "version": "1.0.0",
+  "description": "Caracterização do desvanecimento de pequena escala",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  }
+}

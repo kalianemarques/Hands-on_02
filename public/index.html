@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Hands-on 02</title>
+</head>
+<body>
+
+<div style="display: flex; flex-direction: row; gap: 12px; margin: 12px;">
+    <!-- +Receber os parâmetros de geração do canal: o n do path loss; o sigma do shadowing; e o m de Nakagami; -->
+    <section id="input-channel">
+        <h2>Parâmetros de Geração do Canal</h2>
+        <div id="channel-params-form">
+            <label for="n">Path Loss (n):</label>
+            <input type="number" id="n" name="n" placeholder="n do path loss" required>
+
+            <label for="sigma">Shadowing (σ):</label>
+            <input type="number" id="sigma" name="sigma" placeholder="sigma do shadowing" required>
+
+            <label for="m">Nakagami (m):</label>
+            <input type="number" id="m" name="m" placeholder="m de Nakagami" required>
+
+            <div>
+                <button id="channel">Gerar Canal</button>
+                <button id="graphic">Gerar Gráficos do Canal</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- +Receber os parâmetros de extração das características do canal: o tamanho da janela de filtragem. -->
+    <section id="input-extraction">
+        <h2>Parâmetros de Extração das Características do Canal</h2>
+        <div id="extraction-params-form">
+            <label for="window-size">Tamanho da Janela de Filtragem:</label>
+            <input type="number" id="window-size" name="window-size" placeholder="Tamanho da janela" required>
+
+            <button id="extract">Extrair Características</button>
+        </div>
+    </section>
+</div>
+
+<div>
+    <!-- +Dar a opção de gerar os gráficos do canal gerado (colocar um botão para gerar os gráficos); -->
+    <section id="output-channel" style="display: none;">
+        <h2>Gráficos do Canal gerado</h2>
+        <div id="channel-graphics"></div>
+    </section>
+
+    <!-- +No painel de saída da estimação, informar: o expoente de perda de percurso estimado, o sigma do shadowing estimado e o m de Nakagami estimado; informar também o MSE do shadowing e do desvanecimento de pequena escala para o valor de janela de filtragem escolhido; e os gráficos comparando cada série estimada com seu par original. -->
+    <section id="output-estimation" style="display: none;">
+        <h2>Saída da Estimação</h2>
+        <div id="estimation-results"></div>
+    </section>
+</div>
+
+</body>
+<script type="module" src="module/index.js"></script>
+</html>
