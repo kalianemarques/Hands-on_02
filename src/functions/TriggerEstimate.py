@@ -1,7 +1,7 @@
 import numpy as np
 import sys
+import json
 from scipy.stats import gamma, nakagami
-import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
 from fEstimateChannel import EstimateChannel
 
@@ -15,107 +15,81 @@ shadowingWindow = float(sys.argv[1])
 # Carrega os dados salvos no arquivo .npz
 datachannel = np.load('dados_canal.npz')
 
-#EstimateChannel(shadowingWindow, datachannel)
+# Estimação do canal
 sOut = EstimateChannel(shadowingWindow, datachannel)
-vtMSEShad = []
-vtMSEFad = []
 dW = shadowingWindow
-txPower = 0
-vtDistEst = sOut['vtDistEst']
-vtPathLossEst = sOut['vtPathLossEst']
-dNEst = sOut['dNEst']
-vtShadCorrEst = sOut['vtShadCorrEst']
-dStdShadEst = sOut['dStdShadEst']
-dStdMeanShadEst = sOut['dStdMeanShadEst']
-vtDesPequeEst = sOut['vtDesPequeEst']
-vtPrxEst = sOut['vtPrxEst']
-vtXCcdfEst = sOut['vtXCcdfEst']
-vtYCcdfEst = sOut['vtYCcdfEst']
-vtDistLogEst =np.log10(vtDistEst)
+vtDistLogEst = np.log10(sOut['vtDistEst'])
 vtDistLog = np.log10(datachannel['vtDist'])
 dMeiaJanela = round((dW - 1) / 2)
-len_min = min(len(datachannel['vtShadCorr']), len(vtShadCorrEst))
-mse_shad = mean_squared_error(datachannel['vtShadCorr'][dMeiaJanela+1:-dMeiaJanela], vtShadCorrEst)
-vtMSEShad.append(mse_shad)
-mse_fad = mean_squared_error(vtDesPequeEst, datachannel['vtFading'][dMeiaJanela+1:-dMeiaJanela])
-vtMSEFad.append(mse_fad)
+
+# Verificar se os índices são válidos
+if dMeiaJanela + 1 >= len(datachannel['vtShadCorr']) or dMeiaJanela >= len(sOut['vtShadCorrEst']):
+    print(json.dumps({"error": "Tamanho da janela de filtragem é muito grande para os dados disponíveis."}, indent=4))
+    sys.exit(1)
+
+# Verificar se os tamanhos das variáveis são consistentes
+y_true = datachannel['vtShadCorr'][dMeiaJanela+1:-dMeiaJanela]
+y_pred = sOut['vtShadCorrEst']
+
+if len(y_true) == 0 or len(y_pred) == 0 or len(y_true) != len(y_pred):
+    print(json.dumps({"error": "Os tamanhos das variáveis de entrada são inconsistentes ou vazios."}, indent=4))
+    sys.exit(1)
+
+# Cálculo dos erros
+mse_shad = mean_squared_error(y_true, y_pred)
+
+# Verificar se os tamanhos das variáveis para o CDF são consistentes
+if len(sOut['vtYCcdfEst']) == 0 or len(sOut['vtXCcdfEst']) == 0:
+    print(json.dumps({"error": "Os dados para o cálculo do CDF estão vazios ou inconsistentes."}, indent=4))
+    sys.exit(1)
+
 m, loc_nak, omega = nakagami.fit(sOut['vtEnvNorm'], floc=0)
 xCDF = 10 ** (sOut['vtXCcdfEst'] / 20)
-cdfnaka = gamma.cdf(round(m)*xCDF**2, round(m))
-if np.any(np.isnan(sOut['vtYCcdfEst'])) or np.any(np.isnan(cdfnaka)):
-   mse_fad_cdf = np.nan
+cdfnaka = gamma.cdf(round(m) * xCDF**2, round(m))
+
+if len(sOut['vtYCcdfEst']) != len(cdfnaka):
+    mse_fad_cdf = np.nan
 else:
-   mse_fad_cdf = mean_squared_error(cdfnaka, sOut['vtYCcdfEst'])
+    mse_fad_cdf = mean_squared_error(cdfnaka, sOut['vtYCcdfEst'])
 
+# Dados para o JSON
+resultado = {
+    "estimativa_parametros": {
+        "expoente_path_loss_estimado": round(sOut['dNEst']),
+        "desvio_padrao_sombreamento_estimado": sOut['dStdShadEst'],
+        "m_nakagami": round(m),
+        "media_sombreamento_estimado": sOut["dStdMeanShadEst"],
+        "mse_shadowing": mse_shad,
+        "mse_fading": mse_fad_cdf
+    },
+    "grafico_potencia": {
+        "dist_log_est": vtDistLogEst.tolist(),
+        "prx_est": sOut['vtPrxEst'].tolist(),
+        "path_loss_est": (-sOut['vtPathLossEst']).tolist(),
+        "path_loss_shadowing_est": (-sOut['vtPathLossEst'] + sOut['vtShadCorrEst']).tolist()
+    },
+    "grafico_path_loss": {
+        "dist_log": vtDistLog.tolist(),
+        "path_loss_original": (-datachannel['vtPathLoss']).tolist(),
+        "path_loss_est": (-sOut['vtPathLossEst']).tolist()
+    },
+    "grafico_shadowing": {
+        "dist_log": vtDistLog.tolist(),
+        "shadowing_original": datachannel['vtShadCorr'].tolist(),
+        "shadowing_est": sOut['vtShadCorrEst'].tolist()
+    },
+    "grafico_fading": {
+        "dist_log": vtDistLog.tolist(),
+        "fading_original": datachannel['vtFading'].tolist(),
+        "fading_est": sOut['vtDesPequeEst']
+    },
+    "grafico_cdf": {
+        "x_cdf_est": sOut['vtXCcdfEst'].tolist(),
+        "y_cdf_est": sOut['vtYCcdfEst'].tolist(),
+        "x_cdf_teorica": (20 * np.log10(xCDF)).tolist(),
+        "y_cdf_teorica": cdfnaka.tolist()
+    }
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ------ teste temporário -------REMOVER-------------
-
-print(f'   Estimação dos parâmetros (W = {dW}):')
-print(f'   Expoente de path loss estimado = {round(sOut['dNEst'])} ({sOut['dNEst']})')
-print(f'   Desvio padrão do sombreamento estimado (sigma) = {sOut['dStdShadEst']}')
-print(f'   m de Nakagami = {round(m)} ({m})')
-print(f'   Média do sombreamento estimado = {sOut["dStdMeanShadEst"]}')
-print(f'   MSE Shadowing = {mse_shad}')
-print(f'   MSE Fading = {mse_fad_cdf}')
-print('----\n')
-
-
-plt.figure()
-plt.plot(vtDistLogEst, vtPrxEst, label='Prx canal completo original', linewidth=1)
-plt.plot(vtDistLogEst, -vtPathLossEst, label='Prx (somente path loss) estimado', color='red', linewidth=1)
-plt.plot(vtDistLogEst, -vtPathLossEst + vtShadCorrEst, label='Prx (path loss + shadowing) estimado', color='yellow', linewidth=1)
-plt.xlabel('log10(d)')
-plt.ylabel('Potência [dBm]')
-plt.title('Prx original vs estimada')
-plt.xlim([0.7, 1.6])
-plt.legend()
-plt.grid(True)
-
-plt.figure()
-plt.plot(vtDistLog, -datachannel['vtPathLoss'], label='Path Loss original', linewidth=1)
-plt.plot(vtDistLogEst, -vtPathLossEst, label='Path Loss estimado', linewidth=1)
-plt.title('Perda de percurso original vs estimada')
-plt.legend()
-plt.xlim([0.7, 1.6])
-plt.grid(True)
-
-plt.figure()
-plt.plot(vtDistLog, datachannel['vtShadCorr'], label='Shadowing original', linewidth=1)
-plt.plot(vtDistLogEst, vtShadCorrEst, label='Shadowing estimado', linewidth=1)
-plt.title('Sombreamento original vs estimado')
-plt.xlim([0.7, 1.6])
-plt.legend()
-plt.grid(True)
-
-plt.figure()
-plt.plot(vtDistLog, datachannel['vtFading'], label='Fading original', linewidth=1)
-plt.plot(vtDistLogEst, vtDesPequeEst, label='Fading estimado', linewidth=1)
-plt.title('Fading original vs estimado')
-plt.xlim([0.7, 1.6])
-plt.legend()
-plt.grid(True)
-
-plt.figure()
-plt.plot(sOut['vtXCcdfEst'], sOut['vtYCcdfEst'], 'o-', label='CCDF estimada', linewidth=1)
-plt.plot(20 * np.log10(xCDF), cdfnaka, '--', label='CDF Nakagami teórica', linewidth=1)
-plt.title('CDF teórica e estimada')
-plt.legend()
-plt.xlabel('x')
-plt.ylabel('F(x)')
-plt.axis([-10, 10, 1e-5, 1])
-plt.grid(True, which='both')
-
-plt.show()
+# Retornar o JSON
+print(json.dumps(resultado, indent=4))
