@@ -69,3 +69,63 @@ button:hover {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bar:hover {
+    fill: #ff7f0e;
+}
+
+.dot-completo:hover {
+    r: 3;
+    fill: #ff7f0e;
+}
+
+#line-path-loss, #line-shadowing {
+    stroke-dasharray: 0;
+}
+
+svg {
+    display: block;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.line-cdf-est {
+    stroke: steelblue;
+    stroke-width: 2px;
+}
+
+.line-cdf-teorica {
+    stroke: red;
+    stroke-width: 2px;
+    stroke-dasharray: 5,5;
+}
+
+.line-fading-est, .line-path-loss-est, .line-shadowing-est {
+    stroke: red;
+    stroke-width: 2px;
+}
+
+.line-prx-est {
+    stroke: steelblue;
+    stroke-width: 2px;
+}
+
+.line-path-loss-shadowing-est {
+    stroke: green;
+    stroke-width: 2px;
+}
+
+.dot-original {
+    fill: steelblue;
+    opacity: 0.3;
+}

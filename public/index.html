@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <title>Hands-on 02</title>
 </head>
 <body>
@@ -22,9 +23,14 @@
             <label for="m">Nakagami (m):</label>
             <input type="number" id="m" name="m" placeholder="m de Nakagami" required>
 
+            <div style="display: flex; flex-direction: row; gap: 8px; margin-bottom: 10px;">
+                <label for="show-graphic">Gerar Gráficos do Canal</label>
+                <input type="checkbox" id="show-graphic" name="show-graphic">
+            </div>
+
             <div>
                 <button id="channel">Gerar Canal</button>
-                <button id="graphic">Gerar Gráficos do Canal</button>
+                <!-- <button id="graphic">Gerar Gráficos do Canal</button> -->
             </div>
         </div>
     </section>
@@ -44,8 +50,13 @@
 <div>
     <!-- +Dar a opção de gerar os gráficos do canal gerado (colocar um botão para gerar os gráficos); -->
     <section id="output-channel" style="display: none;">
-        <h2>Gráficos do Canal gerado</h2>
-        <div id="channel-graphics"></div>
+        <h2>Canal Gerado</h2>
+        <div id="channel-results"></div>
+        <div id="show-graphics-channel" style="display: none;">
+            <h2>Gráficos do Canal gerado</h2>
+            <div id="graficoDesvanecimento"></div>
+            <div id="graficoPotencia" style="margin-top: 20px;"></div>
+        </div>
     </section>
 
     <!-- +No painel de saída da estimação, informar: o expoente de perda de percurso estimado, o sigma do shadowing estimado e o m de Nakagami estimado; informar também o MSE do shadowing e do desvanecimento de pequena escala para o valor de janela de filtragem escolhido; e os gráficos comparando cada série estimada com seu par original. -->
