@@ -40,7 +40,7 @@ export async function generateEstimative (windowSize) {
         return data;
     } catch (error) {
         console.error('Erro:', error);
-        alert(`Erro: ${error.message}`); // Exibe o erro para o usuário
+        alert(`Erro: ${error.message}`);
         throw error;
     }
 }

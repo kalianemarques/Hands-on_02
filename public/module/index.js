@@ -1,14 +1,22 @@
-import { criarGraficoCDF, criarGraficoDesvanecimento, criarGraficoFading, criarGraficoPathLoss, criarGraficoPotencia, criarGraficoPotenciaEst, criarGraficoShadowing } from "./functions.js";
+import { createCard, criarGraficoCDF, criarGraficoDesvanecimento, criarGraficoFading, criarGraficoPathLoss, criarGraficoPotencia, criarGraficoPotenciaEst, criarGraficoShadowing } from "./functions.js";
 import { generateChannel, generateEstimative } from "./requests.js";
 
 let cont = 0;
+let vetWindowSize = [];
 
 const btnChannel = document.getElementById("channel");
+const btnExtract = document.getElementById("extract");
+const windowSize = document.getElementById("window-size");
 const graphicContainer = document.getElementById("show-graphics-channel");
 const channelResults = document.getElementById("channel-results");
+const outputEstimation = document.getElementById("output-estimation");
+const estimationResults = document.getElementById("estimation-results");
 
 btnChannel.addEventListener("click", async () => {
-    
+    outputEstimation.style.display = "none";
+    estimationResults.innerHTML = "";
+    vetWindowSize = [];
+
     const m = document.getElementById("m").value;
     const n = document.getElementById("n").value;
     const sigma = document.getElementById("sigma").value;
@@ -42,24 +50,26 @@ btnChannel.addEventListener("click", async () => {
         criarGraficoDesvanecimento("graficoDesvanecimento", data);
         criarGraficoPotencia("graficoPotencia", data);
     }
-    
+    btnExtract.disabled = false;
 });
 
-const btnextract = document.getElementById("extract");
-btnextract.addEventListener("click", async () => {
-
+btnExtract.addEventListener("click", async () => {
     cont++;
-    const windowSize = document.getElementById("window-size").value;
-
+    const value = windowSize.value;
+    
+    if (vetWindowSize.includes(value)) {
+        alert("Tamanho da janela já inserido");
+        return;
+    }
+    
+    vetWindowSize.push(value);
+    
     // try {
-        const data = await generateEstimative(windowSize);
+        const data = await generateEstimative(value);
 
-        const outputEstimation = document.getElementById("output-estimation");
         outputEstimation.style.display = "block";
 
-        const estimationResults = document.getElementById("estimation-results");
-
-        const card = createCard(windowSize, data, cont);
+        const card = createCard(value, data, cont);
         card.classList.add("card");
         estimationResults.appendChild(card);
 
@@ -75,41 +85,14 @@ btnextract.addEventListener("click", async () => {
    
 });
 
-function createCard(windowSize, data, cont) {
-    const card = document.createElement("div");
-    const dataCard = document.createElement("div");
-    const dado = data.estimativa_parametros
-    card.appendChild(dataCard);
-    dataCard.innerHTML = `
-        <h3>Resultados da Estimativa:</h3>
-        <p>Estimação dos parâmetros (W = ${windowSize}):</p>
-        <p>Expoente de path loss estimado = ${dado.expoente_path_loss_estimado}</p>
-        <p>Desvio padrão do sombreamento estimado (sigma) = ${dado.desvio_padrao_sombreamento_estimado}</p>
-        <p>m de Nakagami = ${dado.m_nakagami}</p>
-        <p>Média do sombreamento estimado = ${dado.media_sombreamento_estimado}</p>
-        <p>MSE Shadowing = ${dado.mse_shadowing}</p>
-        <p>MSE Fading = ${dado.mse_fading}</p>
-    `;
+windowSize.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter") {
+        btnExtract.click();
+    }
+});
 
-    const graphic1 = document.createElement("div");
-    graphic1.id = `containerPotenciaEst${cont}`;
-    card.appendChild(graphic1);
-
-    const graphic2 = document.createElement("div");
-    graphic2.id = `containerPathLossEst${cont}`;
-    card.appendChild(graphic2);
-
-    const graphic3 = document.createElement("div");
-    graphic3.id = `containerShadowingEst${cont}`;
-    card.appendChild(graphic3);
-
-    const graphic4 = document.createElement("div");
-    graphic4.id = `containerFadingEst${cont}`;
-    card.appendChild(graphic4);
-
-    const graphic5 = document.createElement("div");
-    graphic5.id = `containerCDF${cont}`;
-    card.appendChild(graphic5);
-
-    return card;
-}
+document.getElementById("m").addEventListener("keydown", async (event) => {
+    if (event.key === "Enter") {
+        btnChannel.click();
+    }
+});
