@@ -23,14 +23,13 @@
             <label for="m">Nakagami (m):</label>
             <input type="number" id="m" name="m" placeholder="m de Nakagami" required>
 
-            <div style="display: flex; flex-direction: row; gap: 8px; margin-bottom: 10px;">
+            <div style="display: flex; flex-direction: row; gap: 8px;">
                 <label for="show-graphic">Gerar Gráficos do Canal</label>
-                <input type="checkbox" id="show-graphic" name="show-graphic">
+                <input type="checkbox" id="show-graphic" name="show-graphic" style="margin-bottom: 10px;">
             </div>
 
             <div>
                 <button id="channel">Gerar Canal</button>
-                <!-- <button id="graphic">Gerar Gráficos do Canal</button> -->
             </div>
         </div>
     </section>
@@ -42,7 +41,7 @@
             <label for="window-size">Tamanho da Janela de Filtragem:</label>
             <input type="number" id="window-size" name="window-size" placeholder="Tamanho da janela" required>
 
-            <button id="extract">Extrair Características</button>
+            <button id="extract" disabled >Extrair Características</button>
         </div>
     </section>
 </div>

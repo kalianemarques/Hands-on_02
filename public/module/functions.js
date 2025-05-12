@@ -1,3 +1,5 @@
+// -> funções de criação de gráficos
+
 export function criarGraficoDesvanecimento(containerId, dados) {
     // Dados do histograma e PDF teórica
     const histograma = dados.grafico_desvanecimento.histograma;
@@ -261,7 +263,7 @@ export function criarGraficoCDF(containerId, dados) {
     }
 
     // Configurações do gráfico
-    const margin = {top: 20, right: 30, bottom: 40, left: 50};
+    const margin = {top: 40, right: 30, bottom: 40, left: 50};
     const width = 600 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
@@ -275,6 +277,15 @@ export function criarGraficoCDF(containerId, dados) {
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Adicionar título do gráfico
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -15) 
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("Estudo do fading com o conhecimento da distribuição");
 
     // Escalas
     const x = d3.scaleLinear()
@@ -338,9 +349,18 @@ export function criarGraficoCDF(containerId, dados) {
         .attr("text-anchor", "middle")
         .text("Probabilidade");
 
-    // Legenda
     const legend = svg.append("g")
-        .attr("transform", `translate(${width - 200},20)`);
+        .attr("transform", `translate(${width - 200},30)`);
+
+    legend.append("rect")
+        .attr("x", -10)
+        .attr("y", -10)
+        .attr("width", 160)
+        .attr("height", 70) 
+        .attr("fill", "white")
+        .attr("opacity", 0.8) 
+        .attr("rx", 5) 
+        .attr("ry", 5); 
 
     legend.append("path")
         .attr("d", "M0,10 L30,10")
@@ -374,7 +394,7 @@ export function criarGraficoFading(containerId, dados) {
     }
 
     // Configurações
-    const margin = {top: 20, right: 30, bottom: 40, left: 50};
+    const margin = { top: 40, right: 30, bottom: 40, left: 50 };
     const width = 800 - margin.left - margin.right;
     const height = 500 - margin.top - margin.bottom;
 
@@ -389,14 +409,23 @@ export function criarGraficoFading(containerId, dados) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // Adicionar título do gráfico
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -15) 
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("Fading Original vs Estimado");
+
     // Escalas
     const x = d3.scaleLinear()
         .domain([d3.min(dados.dist_log), d3.max(dados.dist_log)])
         .range([0, width]);
 
     const y = d3.scaleLinear()
-        .domain([d3.min([...dados.fading_original, ...dados.fading_est]), 
-                d3.max([...dados.fading_original, ...dados.fading_est])])
+        .domain([d3.min([...dados.fading_original, ...dados.fading_est]),
+        d3.max([...dados.fading_original, ...dados.fading_est])])
         .range([height, 0]);
 
     // Eixos
@@ -407,28 +436,18 @@ export function criarGraficoFading(containerId, dados) {
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    // Adicionar pontos para fading original (amostra reduzida para performance)
-    const sampleSize = Math.min(1000, dados.dist_log.length);
-    const step = Math.floor(dados.dist_log.length / sampleSize);
-    
-    const sampledData = [];
-    for (let i = 0; i < dados.dist_log.length; i += step) {
-        sampledData.push({
-            x: dados.dist_log[i],
-            y: dados.fading_original[i]
-        });
-    }
+    // Linha para fading original
+    const lineOriginal = d3.line()
+        .x((d, i) => x(dados.dist_log[i]))
+        .y((d, i) => y(dados.fading_original[i]));
 
-    svg.selectAll(".dot-original")
-        .data(sampledData)
-        .enter()
-        .append("circle")
-        .attr("class", "dot-original")
-        .attr("cx", d => x(d.x))
-        .attr("cy", d => y(d.y))
-        .attr("r", 1.5)
-        .attr("fill", "steelblue")
-        .attr("opacity", 0.3);
+    svg.append("path")
+        .datum(dados.fading_original)
+        .attr("class", "line-fading-original")
+        .attr("d", lineOriginal)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 2);
 
     // Linha para fading estimado
     const lineEst = d3.line()
@@ -457,31 +476,38 @@ export function criarGraficoFading(containerId, dados) {
         .attr("text-anchor", "middle")
         .text("Fading (dB)");
 
-    // Legenda
     const legend = svg.append("g")
-        .attr("transform", `translate(${width - 200},20)`);
+        .attr("transform", `translate(${width - 200},30)`);
+    
+        legend.append("rect")
+        .attr("x", -10)
+        .attr("y", -10)
+        .attr("width", 175)
+        .attr("height", 70) 
+        .attr("fill", "white")
+        .attr("opacity", 0.8) 
+        .attr("rx", 5) 
+        .attr("ry", 5); 
 
-    legend.append("circle")
-        .attr("cx", 9)
-        .attr("cy", 9)
-        .attr("r", 4)
-        .attr("fill", "steelblue")
-        .attr("opacity", 0.7);
+    legend.append("path")
+        .attr("d", "M0,10 L30,10")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 2);
 
     legend.append("text")
-        .attr("x", 20)
-        .attr("y", 9)
+        .attr("x", 35)
+        .attr("y", 10)
         .attr("dy", "0.35em")
         .text("Fading Original");
 
     legend.append("path")
-        .attr("d", "M0,25 L20,25")
+        .attr("d", "M0,30 L30,30")
         .attr("stroke", "red")
         .attr("stroke-width", 2);
 
     legend.append("text")
-        .attr("x", 25)
-        .attr("y", 25)
+        .attr("x", 35)
+        .attr("y", 30)
         .attr("dy", "0.35em")
         .text("Fading Estimado");
 }
@@ -494,7 +520,7 @@ export function criarGraficoPathLoss(containerId, dados) {
     }
 
     // Configurações
-    const margin = {top: 20, right: 30, bottom: 40, left: 50};
+    const margin = {top: 40, right: 30, bottom: 40, left: 50};
     const width = 800 - margin.left - margin.right;
     const height = 500 - margin.top - margin.bottom;
 
@@ -508,6 +534,15 @@ export function criarGraficoPathLoss(containerId, dados) {
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Adicionar título do gráfico
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -15)
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("Perda de percurso original vs estimada");
 
     // Escalas
     const x = d3.scaleLinear()
@@ -568,9 +603,18 @@ export function criarGraficoPathLoss(containerId, dados) {
         .attr("text-anchor", "middle")
         .text("Path Loss (dB)");
 
-    // Legenda
     const legend = svg.append("g")
-        .attr("transform", `translate(${width - 200},20)`);
+        .attr("transform", `translate(${width - 200},30)`);
+
+    legend.append("rect")
+        .attr("x", -10)
+        .attr("y", -10)
+        .attr("width", 200)
+        .attr("height", 70) 
+        .attr("fill", "white")
+        .attr("opacity", 0.8) 
+        .attr("rx", 5) 
+        .attr("ry", 5); 
 
     legend.append("path")
         .attr("d", "M0,10 L30,10")
@@ -604,7 +648,7 @@ export function criarGraficoPotenciaEst(containerId, dados) {
     }
 
     // Configurações
-    const margin = {top: 20, right: 30, bottom: 40, left: 50};
+    const margin = {top: 40, right: 30, bottom: 40, left: 50};
     const width = 800 - margin.left - margin.right;
     const height = 500 - margin.top - margin.bottom;
 
@@ -618,6 +662,15 @@ export function criarGraficoPotenciaEst(containerId, dados) {
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Adicionar título do gráfico
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -15) 
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("Prx original vs estimada");
 
     // Escalas
     const x = d3.scaleLinear()
@@ -690,9 +743,18 @@ export function criarGraficoPotenciaEst(containerId, dados) {
         .attr("text-anchor", "middle")
         .text("Potência (dBm)");
 
-    // Legenda
     const legend = svg.append("g")
-        .attr("transform", `translate(${width - 200},20)`);
+        .attr("transform", `translate(${width - 300},30)`);
+
+    legend.append("rect")
+        .attr("x", -10)
+        .attr("y", -10)
+        .attr("width", 300)
+        .attr("height", 80) 
+        .attr("fill", "white")
+        .attr("opacity", 0.8) 
+        .attr("rx", 5) 
+        .attr("ry", 5); 
 
     legend.append("path")
         .attr("d", "M0,10 L30,10")
@@ -735,8 +797,8 @@ export function criarGraficoShadowing(containerId, dados) {
         return;
     }
 
-    // Configurações
-    const margin = {top: 20, right: 30, bottom: 40, left: 50};
+    // Configurações - aumentei a margem superior para o título
+    const margin = { top: 40, right: 30, bottom: 40, left: 50 };
     const width = 800 - margin.left - margin.right;
     const height = 500 - margin.top - margin.bottom;
 
@@ -751,14 +813,23 @@ export function criarGraficoShadowing(containerId, dados) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // Adicionar título do gráfico
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -15) 
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("Sombreamento Original vs Estimado");
+
     // Escalas
     const x = d3.scaleLinear()
         .domain([d3.min(dados.dist_log), d3.max(dados.dist_log)])
         .range([0, width]);
 
     const y = d3.scaleLinear()
-        .domain([d3.min([...dados.shadowing_original, ...dados.shadowing_est]), 
-                d3.max([...dados.shadowing_original, ...dados.shadowing_est])])
+        .domain([d3.min([...dados.shadowing_original, ...dados.shadowing_est]),
+        d3.max([...dados.shadowing_original, ...dados.shadowing_est])])
         .range([height, 0]);
 
     // Eixos
@@ -769,28 +840,18 @@ export function criarGraficoShadowing(containerId, dados) {
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    // Adicionar pontos para shadowing original (amostra reduzida para performance)
-    const sampleSize = Math.min(1000, dados.dist_log.length);
-    const step = Math.floor(dados.dist_log.length / sampleSize);
-    
-    const sampledData = [];
-    for (let i = 0; i < dados.dist_log.length; i += step) {
-        sampledData.push({
-            x: dados.dist_log[i],
-            y: dados.shadowing_original[i]
-        });
-    }
+    // Linha para shadowing original
+    const lineOriginal = d3.line()
+        .x((d, i) => x(dados.dist_log[i]))
+        .y((d, i) => y(dados.shadowing_original[i]));
 
-    svg.selectAll(".dot-original")
-        .data(sampledData)
-        .enter()
-        .append("circle")
-        .attr("class", "dot-original")
-        .attr("cx", d => x(d.x))
-        .attr("cy", d => y(d.y))
-        .attr("r", 1.5)
-        .attr("fill", "steelblue")
-        .attr("opacity", 0.3);
+    svg.append("path")
+        .datum(dados.shadowing_original)
+        .attr("class", "line-shadowing-original")
+        .attr("d", lineOriginal)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 2);
 
     // Linha para shadowing estimado
     const lineEst = d3.line()
@@ -819,32 +880,79 @@ export function criarGraficoShadowing(containerId, dados) {
         .attr("text-anchor", "middle")
         .text("Shadowing (dB)");
 
-    // Legenda
     const legend = svg.append("g")
-        .attr("transform", `translate(${width - 200},20)`);
+        .attr("transform", `translate(${width - 200},30)`);
 
-    legend.append("circle")
-        .attr("cx", 9)
-        .attr("cy", 9)
-        .attr("r", 4)
-        .attr("fill", "steelblue")
-        .attr("opacity", 0.7);
+    legend.append("rect")
+        .attr("x", -10)
+        .attr("y", -10)
+        .attr("width", 210)
+        .attr("height", 70) 
+        .attr("fill", "white")
+        .attr("opacity", 0.8) 
+        .attr("rx", 5) 
+        .attr("ry", 5); 
+
+    legend.append("path")
+        .attr("d", "M0,10 L30,10")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 2);
 
     legend.append("text")
-        .attr("x", 20)
-        .attr("y", 9)
+        .attr("x", 35)
+        .attr("y", 10)
         .attr("dy", "0.35em")
         .text("Shadowing Original");
 
     legend.append("path")
-        .attr("d", "M0,25 L20,25")
+        .attr("d", "M0,30 L30,30")
         .attr("stroke", "red")
         .attr("stroke-width", 2);
 
     legend.append("text")
-        .attr("x", 25)
-        .attr("y", 25)
+        .attr("x", 35)
+        .attr("y", 30)
         .attr("dy", "0.35em")
         .text("Shadowing Estimado");
 }
 
+
+// -> funcao para criar o card de resultados
+export function createCard(windowSize, data, cont) {
+    const card = document.createElement("div");
+    const dataCard = document.createElement("div");
+    const dado = data.estimativa_parametros
+    card.appendChild(dataCard);
+    dataCard.innerHTML = `
+        <h3>Resultados da Estimativa:</h3>
+        <p>Estimação dos parâmetros (W = ${windowSize}):</p>
+        <p>Expoente de path loss estimado = ${dado.expoente_path_loss_estimado}</p>
+        <p>Desvio padrão do sombreamento estimado (sigma) = ${dado.desvio_padrao_sombreamento_estimado}</p>
+        <p>m de Nakagami = ${dado.m_nakagami}</p>
+        <p>Média do sombreamento estimado = ${dado.media_sombreamento_estimado}</p>
+        <p>MSE Shadowing = ${dado.mse_shadowing}</p>
+        <p>MSE Fading = ${dado.mse_fading}</p>
+    `;
+
+    const graphic1 = document.createElement("div");
+    graphic1.id = `containerPotenciaEst${cont}`;
+    card.appendChild(graphic1);
+
+    const graphic2 = document.createElement("div");
+    graphic2.id = `containerPathLossEst${cont}`;
+    card.appendChild(graphic2);
+
+    const graphic3 = document.createElement("div");
+    graphic3.id = `containerShadowingEst${cont}`;
+    card.appendChild(graphic3);
+
+    const graphic4 = document.createElement("div");
+    graphic4.id = `containerFadingEst${cont}`;
+    card.appendChild(graphic4);
+
+    const graphic5 = document.createElement("div");
+    graphic5.id = `containerCDF${cont}`;
+    card.appendChild(graphic5);
+
+    return card;
+}
